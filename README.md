@@ -1,6 +1,6 @@
 # potato-tools 🥔
 
-Potatoes are delicious and nutritious, and that old gear still has aome vitamins and minerals. 
+Potatoes are delicious and nutritious, and that old gear still has some vitamins and minerals. 
 
 Soup it up!
 
