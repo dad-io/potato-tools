@@ -1,0 +1,28 @@
+# ===== build artifacts =====
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+
+# ===== python =====
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.mypy_cache/
+
+# ===== generated / personal output (DO NOT publish) =====
+# potato-peeler writes machine audits (hostname, user, hardware, installed apps)
+potato-peeler/reports/
+# potato-launcher writes state backups + a transcript next to the script
+backup-*/
+last-run.log
+*.log
+# Rainmeter skin runtime scratch (live telemetry + running process names)
+potato-skins/rainmeter/SystemHMI/@Resources/data.txt
+potato-skins/rainmeter/SystemHMI/@Resources/gpu.txt
+
+# ===== OS / editor cruft =====
+Thumbs.db
+Desktop.ini
+.DS_Store
