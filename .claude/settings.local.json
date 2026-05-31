@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la \"c:/Users/samel/Documents/github/rainmeter-lo\" 2>&1; echo \"---DOCUMENTS---\"; ls \"c:/Users/samel/Documents\" 2>&1 | head -40)",
+      "Read(//c/Users/samel/Documents/**)",
+      "Read(//c/Users/samel/Documents/Rainmeter/**)",
+      "Read(//c/Users/samel/Documents/Rainmeter/Skins/**)",
+      "PowerShell(Get-CimInstance Win32_BaseBoard)",
+      "PowerShell(Get-CimInstance Win32_BIOS)",
+      "PowerShell(\"===TOP 15 BY RAM===\"; Get-Process | Sort-Object WS -Descending | Select-Object -First 15 Name,@{N='RAM\\(MB\\)';E={[math]::Round\\($_.WS/1MB\\)}},CPU,Id | Format-Table -AutoSize; \"`n===PROC COUNT===\"; \\(Get-Process\\).Count; \"`n===MEM IN USE===\"; $os=Get-CimInstance Win32_OperatingSystem; \"Used: $\\([math]::Round\\(\\($os.TotalVisibleMemorySize-$os.FreePhysicalMemory\\)/1MB,1\\)\\) GB / $\\([math]::Round\\($os.TotalVisibleMemorySize/1MB,1\\)\\) GB\")",
+      "PowerShell(Get-CimInstance Win32_StartupCommand)",
+      "PowerShell(\"===STARTUP \\(registry Run + StartupApproved\\)===\")",
+      "PowerShell(\"===VBS / CORE ISOLATION===\"; Get-CimInstance -ClassName Win32_DeviceGuard -Namespace root\\\\Microsoft\\\\Windows\\\\DeviceGuard | Select-Object VirtualizationBasedSecurityStatus,SecurityServicesRunning,SecurityServicesConfigured | Format-List; \"`n===HAGS \\(GPU scheduling\\)===\"; \\(Get-ItemProperty 'HKLM:\\\\SYSTEM\\\\CurrentControlSet\\\\Control\\\\GraphicsDrivers' -Name HwSchMode -ErrorAction SilentlyContinue\\).HwSchMode; \"`n===GAME MODE / GAME DVR===\"; \\(Get-ItemProperty 'HKCU:\\\\Software\\\\Microsoft\\\\GameBar' -Name AutoGameModeEnabled -ErrorAction SilentlyContinue\\).AutoGameModeEnabled; \\(Get-ItemProperty 'HKCU:\\\\System\\\\GameConfigStore' -Name GameDVR_Enabled -ErrorAction SilentlyContinue\\).GameDVR_Enabled)",
+      "PowerShell(\"===NIC POWER SAVING===\"; Get-NetAdapter | Where-Object Status -eq 'Up' | Select-Object Name,InterfaceDescription,LinkSpeed | Format-Table -AutoSize; Get-NetAdapterPowerManagement -ErrorAction SilentlyContinue | Select-Object Name,AllowComputerToTurnOffDevice | Format-Table -AutoSize; \"`n===DNS===\"; \\(Get-DnsClientServerAddress -AddressFamily IPv4 | Where-Object ServerAddresses\\).ServerAddresses | Select-Object -Unique)",
+      "PowerShell(\"===PREINSTALLED APPX BLOAT \\(sample\\)===\"; Get-AppxPackage | Where-Object {$_.Name -match 'Xbox|Bing|Solitaire|Zune|3DViewer|MixedReality|GetHelp|Getstarted|Feedback|People|Skype|Teams|Clipchamp|OutlookForWindows|PowerAutomate|Todos|YourPhone|Family'} | Select-Object Name | Sort-Object Name | Format-Table -AutoSize)",
+      "PowerShell(\"===HYPER-V / WSL \\(Docker dependency\\)===\"; \\(Get-CimInstance Win32_OptionalFeature | Where-Object {$_.Name -match 'Hyper-V-All|Microsoft-Windows-Subsystem-Linux|VirtualMachinePlatform' -and $_.InstallState -eq 1}\\).Name; \"`n===VISUAL FX PREF \\(2=perf,3=custom,1=appearance\\)===\"; \\(Get-ItemProperty 'HKCU:\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\VisualEffects' -Name VisualFXSetting -ErrorAction SilentlyContinue\\).VisualFXSetting; \"`n===WIN BUILD / FEATURE VER===\"; \\(Get-ItemProperty 'HKLM:\\\\SOFTWARE\\\\Microsoft\\\\Windows NT\\\\CurrentVersion'\\).DisplayVersion; \"`n===KEPWARE SERVICE STATE===\"; Get-Service | Where-Object {$_.DisplayName -match 'Kepware|ThingWorx|Docker|LM Studio'} | Select-Object Name,Status,StartType | Format-Table -AutoSize)",
+      "PowerShell(Start-Process powershell -Verb RunAs -Wait -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','C:\\\\Users\\\\samel\\\\Documents\\\\pc-tune\\\\tune.ps1'; \"ELEVATED PROCESS EXITED\")",
+      "WebSearch"
+    ]
+  }
+}

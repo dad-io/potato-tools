@@ -1,4 +1,4 @@
-# HUD Wallpaper
+# Tater Eye Wallpaper
 
 A live desktop wallpaper that renders system-monitoring panels *behind* your icons — the numbers are always there, judging you, but politely, from the back.
 

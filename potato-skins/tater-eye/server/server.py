@@ -11,9 +11,11 @@ Core Temp, paging counters - each a few hundred ms) from the fast cadence
   GET /data    -> { "t": epoch, "hmis": [ <llm>, <sys> ] }
 """
 
+import atexit
 import http.server
 import json
 import os
+import tempfile
 import threading
 import time
 from urllib.parse import urlparse
@@ -26,6 +28,13 @@ import hmi_llm
 
 PORT = 8765
 WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
+# The host launches us via the Store pythonw.exe alias, which exits immediately;
+# it can't track or kill the real interpreter by its Process handle. Record our
+# actual PID here so the host (and stop.ps1) can tear us down precisely. The host
+# passes the exact path via HUD_PID_FILE so the two runtimes can't disagree on it;
+# fall back to the temp dir when run standalone (e.g. run-dev.ps1).
+PID_FILE = os.environ.get("HUD_PID_FILE") or os.path.join(
+    tempfile.gettempdir(), "hudwallpaper.server.pid")
 FAST_INTERVAL = 2.0
 SLOW_INTERVAL = 4.0
 PAGE_BYTES = 4096
@@ -222,6 +231,12 @@ def main():
     except OSError as e:
         print(f"port {PORT} already in use ({e}); exiting to avoid a duplicate")
         return
+    try:
+        with open(PID_FILE, "w") as f:
+            f.write(str(os.getpid()))
+        atexit.register(lambda: os.path.exists(PID_FILE) and os.remove(PID_FILE))
+    except Exception:
+        pass
     print(f"HUD backend on http://127.0.0.1:{PORT}  (Ctrl-C to stop)")
     try:
         srv.serve_forever()

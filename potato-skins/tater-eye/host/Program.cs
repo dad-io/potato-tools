@@ -41,6 +41,8 @@ static class Native
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int w, int h, bool repaint);
     [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool SetWindowPos(IntPtr hWnd, IntPtr after, int x, int y, int w, int h, uint flags);
+    [DllImport("user32.dll", SetLastError = true)]
     public static extern int GetWindowLong(IntPtr hWnd, int index);
     [DllImport("user32.dll", SetLastError = true)]
     public static extern int SetWindowLong(IntPtr hWnd, int index, int newLong);
@@ -61,18 +63,37 @@ static class Native
     public const int WS_CHILD = 0x40000000;
     public const int WS_EX_NOACTIVATE = 0x08000000, WS_EX_TOOLWINDOW = 0x00000080;
 
+    public static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
+    public const uint SWP_NOSIZE = 0x0001, SWP_NOMOVE = 0x0002, SWP_NOACTIVATE = 0x0010;
+
+    public static IntPtr GetProgman() => FindWindow("Progman", null);
+
+    // Locate the dedicated "wallpaper" WorkerW that lives BEHIND the desktop
+    // icons. On a normal console session, sending WM_SPAWN_WORKERW to Progman
+    // splits off a WorkerW whose sibling hosts SHELLDLL_DefView (the icons); we
+    // parent into that WorkerW and sit cleanly behind them. But on some sessions
+    // (notably RDP, and certain shell configs) Progman never spawns it -- the
+    // icons stay as a direct child of Progman and there is no WorkerW behind it.
+    // We retry briefly to give the shell a chance, then fall back to Progman; the
+    // caller detects the fallback (worker == Progman) and drops us to the bottom
+    // of the z-order so the icons still paint in front.
     public static IntPtr FindWorkerW()
     {
-        IntPtr progman = FindWindow("Progman", null);
+        IntPtr progman = GetProgman();
         SendMessageTimeout(progman, WM_SPAWN_WORKERW, IntPtr.Zero, IntPtr.Zero, 0, 1000, out _);
-        IntPtr worker = IntPtr.Zero;
-        EnumWindows((top, _) =>
+        for (int attempt = 0; attempt < 10; attempt++)
         {
-            if (FindWindowEx(top, IntPtr.Zero, "SHELLDLL_DefView", null) != IntPtr.Zero)
-                worker = FindWindowEx(IntPtr.Zero, top, "WorkerW", null);
-            return true;
-        }, IntPtr.Zero);
-        return worker != IntPtr.Zero ? worker : progman;
+            IntPtr worker = IntPtr.Zero;
+            EnumWindows((top, _) =>
+            {
+                if (FindWindowEx(top, IntPtr.Zero, "SHELLDLL_DefView", null) != IntPtr.Zero)
+                    worker = FindWindowEx(IntPtr.Zero, top, "WorkerW", null);
+                return true;
+            }, IntPtr.Zero);
+            if (worker != IntPtr.Zero) return worker;
+            Thread.Sleep(100);
+        }
+        return progman;
     }
 }
 
@@ -81,17 +102,18 @@ class WallpaperForm : Form
     readonly HudRenderer _renderer = new();
     readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(2) };
     readonly JsonSerializerOptions _json = new() { PropertyNameCaseInsensitive = true };
-    readonly string _serverDir, _url = "http://127.0.0.1:8765", _log;
+    readonly string _serverDir, _url = "http://127.0.0.1:8765", _log, _pidFile;
     Process _py;
     System.Windows.Forms.Timer _timer, _watchdog;
     Bitmap _frame;
     Snapshot _data;
-    bool _attached;
+    bool _attached, _fallback;
     int _vx, _vy, _vw, _vh;
 
     public WallpaperForm(string serverDir, string log)
     {
         _serverDir = serverDir; _log = log;
+        _pidFile = Path.Combine(Path.GetTempPath(), "hudwallpaper.server.pid");
         FormBorderStyle = FormBorderStyle.None;
         ShowInTaskbar = false;
         StartPosition = FormStartPosition.Manual;
@@ -118,7 +140,7 @@ class WallpaperForm : Form
         if (_attached) return;
         _attached = true;
 
-        StartPython();
+        if (!await ServerAlive()) StartPython();   // reuse an already-running backend
         await WaitForServerAsync();
         AttachToWorkerW();
 
@@ -142,6 +164,7 @@ class WallpaperForm : Form
 
     async Task FetchAndRenderAsync()
     {
+        if (_fallback) PinToBottom();          // keep the icons in front across desktop refreshes
         if (ShouldPause()) return;             // covered by a fullscreen app
         try
         {
@@ -184,14 +207,18 @@ class WallpaperForm : Form
     {
         try
         {
-            _py = Process.Start(new ProcessStartInfo
+            var psi = new ProcessStartInfo
             {
                 FileName = "pythonw.exe",
                 Arguments = "server.py",
                 WorkingDirectory = _serverDir,
                 UseShellExecute = false,
                 CreateNoWindow = true,
-            });
+            };
+            // Hand the server the exact PID-file path so the two runtimes can't
+            // disagree on where it lives (their temp dirs can differ).
+            psi.Environment["HUD_PID_FILE"] = _pidFile;
+            _py = Process.Start(psi);
             Log($"python started pid={_py?.Id} dir={_serverDir}");
         }
         catch (Exception ex) { Log("python start FAILED: " + ex.Message); }
@@ -201,25 +228,61 @@ class WallpaperForm : Form
     {
         for (int i = 0; i < 40; i++)
         {
-            try { if ((await _http.GetAsync(_url + "/data")).IsSuccessStatusCode) { Log("server up"); return; } }
-            catch { }
+            if (await ServerAlive()) { Log("server up"); return; }
             await Task.Delay(500);
         }
         Log("server did not come up in time");
+    }
+
+    async Task<bool> ServerAlive()
+    {
+        try { return (await _http.GetAsync(_url + "/data")).IsSuccessStatusCode; }
+        catch { return false; }
+    }
+
+    // The server records its real PID (the launched pythonw.exe is the Microsoft
+    // Store app-execution alias, which trampolines to pythonw3.12.exe and exits,
+    // so the Process handle we hold is useless for killing it). Read that PID.
+    void KillServer()
+    {
+        try
+        {
+            if (File.Exists(_pidFile) && int.TryParse(File.ReadAllText(_pidFile).Trim(), out int pid))
+            {
+                try { Process.GetProcessById(pid).Kill(true); Log($"killed server pid={pid}"); }
+                catch { }
+            }
+        }
+        catch { }
     }
 
     void AttachToWorkerW()
     {
         try
         {
+            IntPtr progman = Native.GetProgman();
             IntPtr worker = Native.FindWorkerW();
+            _fallback = worker == progman;
             int style = Native.GetWindowLong(Handle, Native.GWL_STYLE);
             Native.SetWindowLong(Handle, Native.GWL_STYLE, style | Native.WS_CHILD);
             Native.SetParent(Handle, worker);
             Native.MoveWindow(Handle, 0, 0, _vw, _vh, true);
-            Log($"attached to WorkerW=0x{worker.ToInt64():X} size={_vw}x{_vh}");
+            if (_fallback) PinToBottom();   // no WorkerW behind the icons -> sit under SHELLDLL_DefView
+            Log($"attached to {(_fallback ? "Progman(fallback, pinned bottom)" : "WorkerW")}=0x{worker.ToInt64():X} size={_vw}x{_vh}");
         }
         catch (Exception ex) { Log("attach FAILED: " + ex.Message); }
+    }
+
+    // When parented straight into Progman (no dedicated wallpaper WorkerW), the
+    // desktop icons (SHELLDLL_DefView) are our z-order siblings. Drop to the
+    // bottom so they paint in front of us. A desktop refresh (F5, resolution
+    // change, icon add/remove) can re-stack the siblings, so we re-assert this
+    // on every repaint tick while in fallback mode -- a no-op once we're already
+    // at the bottom, so it doesn't flicker.
+    void PinToBottom()
+    {
+        Native.SetWindowPos(Handle, Native.HWND_BOTTOM, 0, 0, 0, 0,
+            Native.SWP_NOMOVE | Native.SWP_NOSIZE | Native.SWP_NOACTIVATE);
     }
 
     void StartWatchdog()
@@ -227,8 +290,13 @@ class WallpaperForm : Form
         _watchdog = new System.Windows.Forms.Timer { Interval = 4000 };
         _watchdog.Tick += async (_, __) =>
         {
-            if (_py == null || _py.HasExited)
-            { Log("python down - restarting"); StartPython(); await WaitForServerAsync(); }
+            // Probe the server, not _py.HasExited: the Store pythonw.exe alias
+            // trampolines and the launched process exits at once, so HasExited is
+            // always true and would respawn forever. Only restart if /data is dead.
+            if (await ServerAlive()) return;
+            Log("server unreachable - restarting python");
+            StartPython();
+            await WaitForServerAsync();
         };
         _watchdog.Start();
     }
@@ -236,7 +304,8 @@ class WallpaperForm : Form
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
         try { _timer?.Stop(); } catch { }
-        try { if (_py != null && !_py.HasExited) _py.Kill(true); } catch { }
+        try { _watchdog?.Stop(); } catch { }
+        KillServer();
         base.OnFormClosing(e);
     }
 }
