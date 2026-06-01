@@ -30,6 +30,12 @@ Built for one 2560×1080 ultrawide (Ryzen 3700X + RTX 5070). Two panels ship:
 
 Host log: `%TEMP%\hudwallpaper.log`.
 
+## Over RDP it won't show — use the console (or the browser)
+
+The behind-the-icons wallpaper layer **cannot render in a Remote Desktop session.** With no real `WorkerW` to slot into (see below), the live wallpaper can only sit either *in front of* everything (covering the icons) or *behind* everything — and RDP composites the Windows wallpaper above that bottom slot, so the HUD ends up hidden. Same reason Wallpaper Engine / Lively go blank over RDP; it's a session limitation, not a bug. It renders correctly at the **physical console**.
+
+To watch the HUD while connected remotely, run `.\run-dev.ps1` — the same `/data`, in a browser, no wallpaper layer.
+
 ## Adding a panel
 
 Pure Python: drop a `server/hmi_<name>.py` with `build(snap) -> dict`, import it in `server.py`, append it to `State.render()`. The renderer lays out any number of panels in a grid — it draws whatever channels/notes come back in `/data`. No C#, no recompiling.
@@ -38,4 +44,6 @@ Pure Python: drop a `server/hmi_<name>.py` with `build(snap) -> dict`, import it
 
 - Per-process VRAM comes from Windows PDH counters; `nvidia-smi` returns `N/A` per-process on consumer GPUs.
 - LLM KV-cache / footprint numbers are **estimates** (labelled `est`).
-- No split WorkerW? It parents to Progman and renders behind the icons anyway.
+- **No split WorkerW** (some shells; *always* over RDP): the icons (`SHELLDLL_DefView`) hang straight off `Progman` with nothing behind them. The host parents into `Progman` and drops itself to the **bottom** of the z-order — re-asserted every tick, since a desktop refresh can re-stack siblings — so the icons keep painting in front. (At the physical console the real WorkerW is used and this is moot.)
+- **Desktop size is re-read every tick**, so resizing an RDP client window (or any resolution change) re-fits the surface instead of stranding it at the launch-time size.
+- **`pythonw.exe` is the Microsoft Store app-execution alias** here: it trampolines to `pythonw3.12.exe` and the process we launched exits immediately. So the watchdog restarts on a failed `/data` **health probe**, not on `Process.HasExited` (which is always true and would respawn forever). The server writes its real PID to a file — path handed over via the `HUD_PID_FILE` env var — so the host and `stop.ps1` can tear it down precisely.
