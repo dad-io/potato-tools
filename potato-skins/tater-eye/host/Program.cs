@@ -164,6 +164,7 @@ class WallpaperForm : Form
 
     async Task FetchAndRenderAsync()
     {
+        CheckResize();                         // RDP resizes the desktop under us; track it
         if (_fallback) PinToBottom();          // keep the icons in front across desktop refreshes
         if (ShouldPause()) return;             // covered by a fullscreen app
         try
@@ -283,6 +284,21 @@ class WallpaperForm : Form
     {
         Native.SetWindowPos(Handle, Native.HWND_BOTTOM, 0, 0, 0, 0,
             Native.SWP_NOMOVE | Native.SWP_NOSIZE | Native.SWP_NOACTIVATE);
+    }
+
+    // The virtual-screen size is captured once at launch, but an RDP session
+    // resizes the desktop whenever the client window changes (and a physical
+    // display can change resolution too). Re-read it each tick and resize the
+    // surface to match, so the HUD always fills the actual desktop instead of
+    // a stale rectangle.
+    void CheckResize()
+    {
+        int vw = Native.GetSystemMetrics(Native.SM_CXVIRTUALSCREEN);
+        int vh = Native.GetSystemMetrics(Native.SM_CYVIRTUALSCREEN);
+        if (vw == _vw && vh == _vh) return;
+        _vw = vw; _vh = vh;
+        Native.MoveWindow(Handle, 0, 0, _vw, _vh, true);
+        Log($"desktop resized -> {_vw}x{_vh}");
     }
 
     void StartWatchdog()
