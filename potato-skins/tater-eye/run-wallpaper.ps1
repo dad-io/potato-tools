@@ -1,6 +1,6 @@
 # run-wallpaper.ps1 - build (if needed) and launch the live wallpaper.
-# The host process starts the Python backend itself and parents a WebView2
-# behind the desktop icons. Use stop.ps1 to tear it down.
+# The host process starts the Python backend itself and parents a native GDI+
+# surface behind the desktop icons. Use stop.ps1 to tear it down.
 $ErrorActionPreference = "Stop"
 $host_dir = Join-Path $PSScriptRoot "host"
 $exe = Join-Path $host_dir "bin\Release\net9.0-windows\win-x64\HudWallpaper.exe"
