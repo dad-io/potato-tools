@@ -4,14 +4,13 @@
                           {
                               "target":  "Taskbar.TaskbarFrame \u003e Grid#RootGrid \u003e Taskbar.TaskbarBackground \u003e Grid \u003e Rectangle#BackgroundFill",
                               "styles":  [
-                                             "Fill=#20201F"
+                                             "Fill=Transparent"
                                          ]
                           },
                           {
                               "target":  "Rectangle#BackgroundStroke",
                               "styles":  [
-                                             "Fill=#121211",
-                                             "Height=2"
+                                             "Fill=Transparent"
                                          ]
                           },
                           {
