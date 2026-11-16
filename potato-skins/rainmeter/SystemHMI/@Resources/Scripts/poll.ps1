@@ -17,7 +17,11 @@ if (-not $created) { return }   # another poller already running
 $ErrorActionPreference = 'SilentlyContinue'
 $cores = (Get-CimInstance Win32_Processor).NumberOfLogicalProcessors
 if (-not $cores) { $cores = 16 }
-$cpuBase = 3.6   # Ryzen 7 3700X base clock (GHz)
+$cpuBase = (Get-CimInstance Win32_Processor | Select-Object -First 1).MaxClockSpeed / 1000.0   # base clock (GHz)
+if (-not $cpuBase) { $cpuBase = 3.6 }
+$hasNvidia = [bool](Get-Command nvidia-smi -ErrorAction SilentlyContinue)
+# iGPU shared-memory ceiling: Windows lets an integrated GPU borrow up to half of system RAM
+$sharedTotalMB = [math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 2 / 1MB)
 
 # --- native interop: Core Temp shared memory + foreground window ---
 Add-Type -TypeDefinition @"
@@ -57,6 +61,27 @@ function Read-CpuTemp {
     [HMI]::UnmapViewOfFile($p) | Out-Null
     return [int][math]::Round($max)
   } finally { [HMI]::CloseHandle($h) | Out-Null }
+}
+
+# Fallback when Core Temp isn't running: ACPI thermal zones (Kelvin, no admin needed).
+# Zones reporting implausible values (some ECs expose a stub zone) are ignored.
+function Read-AcpiTemp {
+  $s = Get-Counter '\Thermal Zone Information(*)\Temperature' -ErrorAction SilentlyContinue
+  if (-not $s) { return $null }
+  $k = $s.CounterSamples | Where-Object { $_.CookedValue -gt 273 -and $_.CookedValue -lt 400 } |
+       Measure-Object CookedValue -Maximum
+  if (-not $k.Count) { return $null }
+  return [int][math]::Round($k.Maximum - 273.15)
+}
+
+# Integrated GPU (Intel/AMD) via WDDM PDH counters: 3D-engine load + shared memory in use.
+function Get-IGpu {
+  $u = Get-Counter '\GPU Engine(*engtype_3D)\Utilization Percentage' -ErrorAction SilentlyContinue
+  $m = Get-Counter '\GPU Adapter Memory(*)\Shared Usage' -ErrorAction SilentlyContinue
+  $util = 0; $memMB = 0
+  if ($u) { $util = [math]::Min(100, [math]::Round(($u.CounterSamples | Measure-Object CookedValue -Sum).Sum)) }
+  if ($m) { $memMB = [math]::Round(($m.CounterSamples | Measure-Object CookedValue -Maximum).Maximum / 1MB) }
+  return @{ Util = $util; MemMB = $memMB }
 }
 
 function Test-Fullscreen {
@@ -122,8 +147,15 @@ $iter = 0
 while ($true) {
   $lines = New-Object System.Collections.Generic.List[string]
 
-  # ---- GPU via nvidia-smi ----
-  $g = & nvidia-smi --query-gpu=temperature.gpu,utilization.gpu,memory.used,memory.total,power.draw,fan.speed,clocks.gr --format=csv,noheader,nounits 2>$null
+  # ---- GPU via nvidia-smi, or the integrated GPU via PDH ----
+  $g = $null
+  if ($hasNvidia) { $g = & nvidia-smi --query-gpu=temperature.gpu,utilization.gpu,memory.used,memory.total,power.draw,fan.speed,clocks.gr --format=csv,noheader,nounits 2>$null }
+  if (-not $g) {
+    $ig = Get-IGpu
+    $lines.Add("GPUUTIL=$($ig.Util)")
+    $lines.Add("GPUMEMUSED=$($ig.MemMB)")
+    $lines.Add("GPUMEMTOTAL=$sharedTotalMB")
+  }
   if ($g) {
     $f = ($g -split ',').Trim()
     $lines.Add("GPUTEMP=$($f[0])")
@@ -138,6 +170,7 @@ while ($true) {
 
   # ---- CPU ----
   $ct = Read-CpuTemp
+  if ($null -eq $ct) { $ct = Read-AcpiTemp }
   $lines.Add("CPUTEMP=$(if ($null -ne $ct) { $ct } else { '--' })")
   $perf = (Get-Counter '\Processor Information(_Total)\% Processor Performance' -ErrorAction SilentlyContinue).CounterSamples[0].CookedValue
   if ($perf) { $lines.Add("CPUCLOCK=$('{0:N2}' -f ($cpuBase * $perf / 100))") } else { $lines.Add("CPUCLOCK=--") }
