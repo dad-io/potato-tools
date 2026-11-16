@@ -1,0 +1,5 @@
+{
+  "$schema": "https://TranslucentTB.github.io/settings.schema.json",
+  "desktop_appearance": { "accent": "clear", "color": "#00000000", "show_peek": true, "show_line": false },
+  "visible_window_appearance": { "enabled": true, "accent": "clear", "color": "#00000000", "show_peek": true, "show_line": false }
+}
