@@ -1,5 +1,7 @@
-{
+﻿{
   "$schema": "https://TranslucentTB.github.io/settings.schema.json",
   "desktop_appearance": { "accent": "clear", "color": "#00000000", "show_peek": true, "show_line": false },
-  "visible_window_appearance": { "enabled": true, "accent": "clear", "color": "#00000000", "show_peek": true, "show_line": false }
+  "visible_window_appearance": { "enabled": true, "accent": "acrylic", "color": "#141B21B0", "show_peek": true, "show_line": false },
+  "maximised_window_appearance": { "enabled": true, "accent": "acrylic", "color": "#141B21D8", "show_peek": true, "show_line": false },
+  "start_opened_appearance": { "enabled": true, "accent": "acrylic", "color": "#202A32C0", "show_peek": true, "show_line": false }
 }

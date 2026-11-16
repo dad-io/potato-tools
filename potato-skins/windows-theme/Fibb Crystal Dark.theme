@@ -1,0 +1,32 @@
+; Fibb "Crystal Dark" (Graphite + Instrument Blue) for Windows 11.
+; Colours from fibbonacci-ui/src/data/designTokens.ts, theme "crystal-dark".
+; Double-click to apply. Wallpaper expects ..\wallpapers\orion-young-stars-2560x1080.jpg copied to Pictures\Wallpapers.
+
+[Theme]
+DisplayName=Fibb Crystal Dark
+
+[Control Panel\Desktop]
+Wallpaper=%USERPROFILE%\Pictures\Wallpapers\orion-young-stars-2560x1080.jpg
+WallpaperStyle=10
+TileWallpaper=0
+Pattern=
+
+[VisualStyles]
+Path=%SystemRoot%\resources\themes\Aero\Aero.msstyles
+ColorStyle=NormalColor
+Size=NormalSize
+AutoColorization=0
+; Instrument Blue #a2cde2 as the accent (AARRGGBB)
+ColorizationColor=0XC4A2CDE2
+SystemMode=Dark
+AppMode=Dark
+VisualStyleVersion=10
+
+[MasterThemeSelector]
+MTSM=RJSPBS
+
+[Sounds]
+SchemeName=
+
+[boot]
+SCRNSAVE.EXE=
