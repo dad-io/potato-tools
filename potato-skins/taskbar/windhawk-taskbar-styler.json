@@ -1,42 +1,120 @@
-{
-  "theme": "",
-  "controlStyles": [
-    {
-      "target": "Taskbar.TaskListButton",
-      "styles": ["CornerRadius=8"]
-    },
-    {
-      "target": "Grid#IconPanel > Border#BackgroundElement, Taskbar.TaskListLabeledButtonPanel > Border#BackgroundElement",
-      "styles": ["CornerRadius=8"]
-    },
-    {
-      "target": "Grid#IconPanel@RunningIndicatorStates > Rectangle#RunningIndicator, Taskbar.TaskListLabeledButtonPanel@RunningIndicatorStates > Rectangle#RunningIndicator",
-      "styles": [
-        "Height=3",
-        "RadiusX=1.5",
-        "RadiusY=1.5",
-        "Width@ActiveRunningIndicator=20",
-        "Width@InactiveRunningIndicator=6",
-        "Fill@ActiveRunningIndicator=#A2CDE2",
-        "Fill@InactiveRunningIndicator=#81929E"
-      ]
-    },
-    {
-      "target": "TextBlock#TimeInnerTextBlock",
-      "styles": ["Foreground=#EDF3F6", "FontWeight=SemiBold"]
-    },
-    {
-      "target": "TextBlock#DateInnerTextBlock",
-      "styles": ["Foreground=#B6C5CE"]
-    },
-    {
-      "target": "Rectangle#BackgroundStroke",
-      "styles": ["Fill=#46545F"]
-    },
-    {
-      "target": "Taskbar.TaskbarBackground#HoverFlyoutBackgroundControl > Grid > Rectangle#BackgroundFill",
-      "styles": ["Fill=#202A32"]
-    }
-  ],
-  "resourceVariables": []
+﻿{
+    "theme":  "",
+    "controlStyles":  [
+                          {
+                              "target":  "Taskbar.TaskbarFrame \u003e Grid#RootGrid \u003e Taskbar.TaskbarBackground \u003e Grid \u003e Rectangle#BackgroundFill",
+                              "styles":  [
+                                             "Fill=#E9E8E5"
+                                         ]
+                          },
+                          {
+                              "target":  "Rectangle#BackgroundStroke",
+                              "styles":  [
+                                             "Fill=#A2A39E",
+                                             "Height=2"
+                                         ]
+                          },
+                          {
+                              "target":  "Taskbar.TaskListButton",
+                              "styles":  [
+                                             "CornerRadius=4"
+                                         ]
+                          },
+                          {
+                              "target":  "Grid#IconPanel@CommonStates \u003e Border#BackgroundElement, Taskbar.TaskListLabeledButtonPanel@CommonStates \u003e Border#BackgroundElement",
+                              "styles":  [
+                                             "CornerRadius=4",
+                                             "Margin=4,3,4,3",
+                                             "Background@Normal:=\u003cLinearGradientBrush StartPoint=\"0,0.37\" EndPoint=\"1,0.63\"\u003e\u003cGradientStop Color=\"#F7F4EB\" Offset=\"0\"/\u003e\u003cGradientStop Color=\"#E6E3DA\" Offset=\"0.7\"/\u003e\u003cGradientStop Color=\"#DCDCD8\" Offset=\"1\"/\u003e\u003c/LinearGradientBrush\u003e",
+                                             "Background@InactiveNormal:=\u003cLinearGradientBrush StartPoint=\"0,0.37\" EndPoint=\"1,0.63\"\u003e\u003cGradientStop Color=\"#F7F4EB\" Offset=\"0\"/\u003e\u003cGradientStop Color=\"#E6E3DA\" Offset=\"0.7\"/\u003e\u003cGradientStop Color=\"#DCDCD8\" Offset=\"1\"/\u003e\u003c/LinearGradientBrush\u003e",
+                                             "Background@PointerOver:=\u003cLinearGradientBrush StartPoint=\"0,0.37\" EndPoint=\"1,0.63\"\u003e\u003cGradientStop Color=\"#FBF9F2\" Offset=\"0\"/\u003e\u003cGradientStop Color=\"#ECE9E1\" Offset=\"0.7\"/\u003e\u003cGradientStop Color=\"#E3E3DF\" Offset=\"1\"/\u003e\u003c/LinearGradientBrush\u003e",
+                                             "Background@InactivePointerOver:=\u003cLinearGradientBrush StartPoint=\"0,0.37\" EndPoint=\"1,0.63\"\u003e\u003cGradientStop Color=\"#FBF9F2\" Offset=\"0\"/\u003e\u003cGradientStop Color=\"#ECE9E1\" Offset=\"0.7\"/\u003e\u003cGradientStop Color=\"#E3E3DF\" Offset=\"1\"/\u003e\u003c/LinearGradientBrush\u003e",
+                                             "Background@Pressed:=\u003cLinearGradientBrush StartPoint=\"0,0.37\" EndPoint=\"1,0.63\"\u003e\u003cGradientStop Color=\"#D3D5CE\" Offset=\"0\"/\u003e\u003cGradientStop Color=\"#C1C4BC\" Offset=\"1\"/\u003e\u003c/LinearGradientBrush\u003e",
+                                             "Background@InactivePressed:=\u003cLinearGradientBrush StartPoint=\"0,0.37\" EndPoint=\"1,0.63\"\u003e\u003cGradientStop Color=\"#D3D5CE\" Offset=\"0\"/\u003e\u003cGradientStop Color=\"#C1C4BC\" Offset=\"1\"/\u003e\u003c/LinearGradientBrush\u003e",
+                                             "Background@ActiveNormal:=\u003cLinearGradientBrush StartPoint=\"0,0.37\" EndPoint=\"1,0.63\"\u003e\u003cGradientStop Color=\"#D3D5CE\" Offset=\"0\"/\u003e\u003cGradientStop Color=\"#C1C4BC\" Offset=\"1\"/\u003e\u003c/LinearGradientBrush\u003e",
+                                             "Background@ActivePointerOver:=\u003cLinearGradientBrush StartPoint=\"0,0.37\" EndPoint=\"1,0.63\"\u003e\u003cGradientStop Color=\"#D8DAD3\" Offset=\"0\"/\u003e\u003cGradientStop Color=\"#C7CAC2\" Offset=\"1\"/\u003e\u003c/LinearGradientBrush\u003e",
+                                             "Background@ActivePressed:=\u003cLinearGradientBrush StartPoint=\"0,0.37\" EndPoint=\"1,0.63\"\u003e\u003cGradientStop Color=\"#D3D5CE\" Offset=\"0\"/\u003e\u003cGradientStop Color=\"#C1C4BC\" Offset=\"1\"/\u003e\u003c/LinearGradientBrush\u003e",
+                                             "BorderBrush@ActiveNormal=#9C9E98",
+                                             "BorderBrush@ActivePointerOver=#9C9E98",
+                                             "BorderBrush@ActivePressed=#9C9E98",
+                                             "BorderBrush@Pressed=#9C9E98",
+                                             "BorderBrush@InactivePressed=#9C9E98",
+                                             "BorderThickness@ActiveNormal=2,2,1,1",
+                                             "BorderThickness@ActivePointerOver=2,2,1,1",
+                                             "BorderThickness@ActivePressed=2,2,1,1",
+                                             "BorderThickness@Pressed=2,2,1,1",
+                                             "BorderThickness@InactivePressed=2,2,1,1",
+                                             "BorderBrush@Normal=#A5A5A0",
+                                             "BorderThickness@Normal=1,1,1,3",
+                                             "BorderBrush@InactiveNormal=#A5A5A0",
+                                             "BorderThickness@InactiveNormal=1,1,1,3",
+                                             "BorderBrush@PointerOver=#A5A5A0",
+                                             "BorderThickness@PointerOver=1,1,1,3",
+                                             "BorderBrush@InactivePointerOver=#A5A5A0",
+                                             "BorderThickness@InactivePointerOver=1,1,1,3"
+                                         ]
+                          },
+                          {
+                              "target":  "Taskbar.TaskListButtonPanel#ExperienceToggleButtonRootPanel@CommonStates \u003e Border#BackgroundElement, Taskbar.TaskListButtonPanel#ExperienceToggleButtonRootPanel@CommonStates \u003e Grid \u003e Border#BackgroundElement",
+                              "styles":  [
+                                             "CornerRadius=4",
+                                             "Margin=4,3,4,3",
+                                             "BorderBrush=#A5A5A0",
+                                             "BorderThickness=1,1,1,3",
+                                             "Background:=\u003cLinearGradientBrush StartPoint=\"0,0.37\" EndPoint=\"1,0.63\"\u003e\u003cGradientStop Color=\"#F7F4EB\" Offset=\"0\"/\u003e\u003cGradientStop Color=\"#E6E3DA\" Offset=\"0.7\"/\u003e\u003cGradientStop Color=\"#DCDCD8\" Offset=\"1\"/\u003e\u003c/LinearGradientBrush\u003e"
+                                         ]
+                          },
+                          {
+                              "target":  "Grid#IconPanel@RunningIndicatorStates \u003e Rectangle#RunningIndicator, Taskbar.TaskListLabeledButtonPanel@RunningIndicatorStates \u003e Rectangle#RunningIndicator",
+                              "styles":  [
+                                             "Height=2",
+                                             "RadiusX=1",
+                                             "RadiusY=1",
+                                             "Margin=0,0,0,6",
+                                             "Width@ActiveRunningIndicator=14",
+                                             "Width@InactiveRunningIndicator=6",
+                                             "Fill@ActiveRunningIndicator=#3D423B",
+                                             "Fill@InactiveRunningIndicator=#535751"
+                                         ]
+                          },
+                          {
+                              "target":  "TextBlock#TimeInnerTextBlock",
+                              "styles":  [
+                                             "Foreground=#232524",
+                                             "FontFamily=IBM Plex Mono, Consolas",
+                                             "FontSize=12",
+                                             "FontWeight=Medium"
+                                         ]
+                          },
+                          {
+                              "target":  "TextBlock#DateInnerTextBlock",
+                              "styles":  [
+                                             "Foreground=#535751",
+                                             "FontFamily=IBM Plex Mono, Consolas",
+                                             "FontSize=12",
+                                             "FontWeight=Medium"
+                                         ]
+                          },
+                          {
+                              "target":  "Taskbar.TaskbarBackground#HoverFlyoutBackgroundControl \u003e Grid \u003e Rectangle#BackgroundFill",
+                              "styles":  [
+                                             "Fill=#F3F3EF"
+                                         ]
+                          },
+                          {
+                              "target":  "SystemTray.TextIconContent \u003e Grid#ContainerGrid \u003e SystemTray.AdaptiveTextBlock#Base \u003e TextBlock#InnerTextBlock",
+                              "styles":  [
+                                             "Foreground=#535751"
+                                         ]
+                          },
+                          {
+                              "target":  "SystemTray.ChevronIconView \u003e Grid \u003e SystemTray.AdaptiveTextBlock \u003e TextBlock",
+                              "styles":  [
+                                             "Foreground=#535751"
+                                         ]
+                          }
+                      ],
+    "resourceVariables":  [
+
+                          ]
 }
