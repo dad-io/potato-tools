@@ -16,6 +16,15 @@ for ($i = 0; $i -lt $cfg.controlStyles.Count; $i++) {
         Set-ItemProperty $key -Name "controlStyles[$i].styles[$j]" -Value $c.styles[$j] -Type String
     }
 }
+# Optional: "Taskbar height and icon size" mod (taskbar-icon-size) gets windhawk-taskbar-size.json
+$sizeMod = 'HKLM:\SOFTWARE\Windhawk\Engine\Mods\taskbar-icon-size'
+if (Test-Path "$sizeMod\Settings") {
+    $size = Get-Content (Join-Path $PSScriptRoot 'windhawk-taskbar-size.json') -Raw | ConvertFrom-Json
+    foreach ($prop in $size.PSObject.Properties) { Set-ItemProperty "$sizeMod\Settings" -Name $prop.Name -Value ([int]$prop.Value) -Type DWord }
+    Set-ItemProperty $sizeMod -Name SettingsChangeTime -Value ([int]([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())) -Type DWord
+    Write-Host "Taskbar size: height $($size.TaskbarHeight), icons $($size.IconSize), buttons $($size.TaskbarButtonWidth)."
+}
+
 # bump the mod's settings-changed counter if present so the engine reloads it, then restart Windhawk
 $mod = Split-Path $key -Parent
 $sc = (Get-ItemProperty $mod -ErrorAction SilentlyContinue).SettingsChangeTime
