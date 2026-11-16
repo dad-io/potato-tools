@@ -1,0 +1,42 @@
+{
+  "theme": "",
+  "controlStyles": [
+    {
+      "target": "Taskbar.TaskListButton",
+      "styles": ["CornerRadius=8"]
+    },
+    {
+      "target": "Grid#IconPanel > Border#BackgroundElement, Taskbar.TaskListLabeledButtonPanel > Border#BackgroundElement",
+      "styles": ["CornerRadius=8"]
+    },
+    {
+      "target": "Grid#IconPanel@RunningIndicatorStates > Rectangle#RunningIndicator, Taskbar.TaskListLabeledButtonPanel@RunningIndicatorStates > Rectangle#RunningIndicator",
+      "styles": [
+        "Height=3",
+        "RadiusX=1.5",
+        "RadiusY=1.5",
+        "Width@ActiveRunningIndicator=20",
+        "Width@InactiveRunningIndicator=6",
+        "Fill@ActiveRunningIndicator=#A2CDE2",
+        "Fill@InactiveRunningIndicator=#81929E"
+      ]
+    },
+    {
+      "target": "TextBlock#TimeInnerTextBlock",
+      "styles": ["Foreground=#EDF3F6", "FontWeight=SemiBold"]
+    },
+    {
+      "target": "TextBlock#DateInnerTextBlock",
+      "styles": ["Foreground=#B6C5CE"]
+    },
+    {
+      "target": "Rectangle#BackgroundStroke",
+      "styles": ["Fill=#46545F"]
+    },
+    {
+      "target": "Taskbar.TaskbarBackground#HoverFlyoutBackgroundControl > Grid > Rectangle#BackgroundFill",
+      "styles": ["Fill=#202A32"]
+    }
+  ],
+  "resourceVariables": []
+}
