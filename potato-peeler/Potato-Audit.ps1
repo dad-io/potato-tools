@@ -226,18 +226,33 @@ function Collect-Storage {
 function Collect-Power {
     $active = (& powercfg /getactivescheme 2>$null | Out-String)
     $name = if ($active -match '\((.+)\)') { $matches[1] } else { 'unknown' }
+    # Windows 11 "Power mode" is an overlay on top of the plan (the only lever on
+    # Modern Standby machines, which hide the High/Ultimate Performance plans).
+    $ps = Try-Cim { Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes' -ErrorAction SilentlyContinue }
+    $overlay = switch ("$($ps.ActiveOverlayAcPowerScheme)".ToLower()) {
+        'ded574b5-45a0-4f42-8737-46345c09c238' { 'Best performance' }
+        '3af9b8d9-7c97-431d-ad78-34a8bfea439f' { 'Better performance' }
+        '961cc777-2547-4f9d-8174-7d86181b8a7a' { 'Best power efficiency' }
+        default                                 { 'Balanced' }
+    }
+    $modernStandby = ((& powercfg /a 2>$null | Out-String) -match 'Standby \(S0 Low Power Idle\)\s')
+    $planLabel = if ($overlay -ne 'Balanced') { "$name + $overlay mode" } else { $name }
     $hiber = (Try-Cim { Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Power' -Name HiberbootEnabled -ErrorAction SilentlyContinue }).HiberbootEnabled
     $pf = @(Try-Cim { Get-CimInstance Win32_PageFileUsage })
     $pfTotal = ($pf | Measure-Object AllocatedBaseSize -Sum).Sum
     $os = Try-Cim { Get-CimInstance Win32_OperatingSystem }
     $ramGB = if ($os) { [math]::Round($os.TotalVisibleMemorySize/1MB) } else { 0 }
     Add-Section 'Power & Memory tuning' @(
-        Row 'Active power plan' $name
-        Row 'Fast Startup'      $(if ($hiber -eq 1) { 'ON' } elseif ($hiber -eq 0) { 'off' } else { 'default' })
+        Row 'Active power plan' $planLabel
+        Row 'Fast Startup'     $(if ($hiber -eq 1) { 'ON' } elseif ($hiber -eq 0) { 'off' } else { 'default' })
         Row 'Pagefile total'    ("{0} MB" -f ([int]$pfTotal))
     )
-    if ($name -match 'Balanced|Power saver') {
-        Add-Finding 'WARN' 'Power' ("Active plan is '$name'.") 'Switch to High or Ultimate Performance on a desktop.'
+    if ($name -match 'Power saver') {
+        Add-Finding 'WARN' 'Power' ("Active plan is '$name'.") 'Switch to Balanced + Best performance, or High/Ultimate Performance on a desktop.'
+    } elseif ($name -match 'Balanced' -and $overlay -notmatch 'performance') {
+        $fix = if ($modernStandby) { 'Modern Standby hides High/Ultimate plans: set Settings > System > Power > Power mode to Best performance.' }
+               else { 'Switch to High or Ultimate Performance on a desktop, or set Power mode to Best performance.' }
+        Add-Finding 'WARN' 'Power' ("Active plan is '$name' with power mode '$overlay'.") $fix
     }
     if ($hiber -eq 1) {
         Add-Finding 'INFO' 'Power' 'Fast Startup is enabled.' 'Disable for clean cold boots; REQUIRED off before a BIOS flash.'
@@ -266,11 +281,11 @@ function Collect-GpuTuning {
 function Collect-Startup {
     $heavy = 'Docker','LM Studio','Steam','Epic','EADM','EA Desktop','GalaxyClient','Ubisoft','Riot','LMStudio'
     $rows = @(); $enabledHeavy = @()
-    $saRun = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run'
-    $sa = Try-Cim { Get-ItemProperty $saRun -ErrorAction SilentlyContinue }
     foreach ($hive in 'HKCU','HKLM') {
         $run = Try-Cim { Get-Item "${hive}:\Software\Microsoft\Windows\CurrentVersion\Run" }
         if (-not $run) { continue }
+        # each hive keeps its own Task Manager enable/disable state
+        $sa = Try-Cim { Get-ItemProperty "${hive}:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run" -ErrorAction SilentlyContinue }
         foreach ($name in $run.Property) {
             $state = 'enabled'
             $b = if ($sa) { $sa.$name } else { $null }
