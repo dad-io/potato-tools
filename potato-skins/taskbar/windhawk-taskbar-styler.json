@@ -85,18 +85,43 @@
                               "target":  "TextBlock#TimeInnerTextBlock",
                               "styles":  [
                                              "Foreground=#EBE7DC",
-                                             "FontFamily=IBM Plex Mono, Consolas",
-                                             "FontSize=12",
-                                             "FontWeight=Medium"
+                                             "FontFamily=Ubuntu Light",
+                                             "FontWeight=Light",
+                                             "FontSize=14"
                                          ]
                           },
                           {
                               "target":  "TextBlock#DateInnerTextBlock",
                               "styles":  [
                                              "Foreground=#DADAD6",
-                                             "FontFamily=IBM Plex Mono, Consolas",
-                                             "FontSize=12",
-                                             "FontWeight=Medium"
+                                             "FontFamily=Ubuntu Light",
+                                             "FontWeight=Light",
+                                             "FontSize=13"
+                                         ]
+                          },
+                          {
+                              "target":  "SystemTray.ImageIconContent \u003e Grid#ContainerGrid \u003e Image",
+                              "styles":  [
+                                             "Width=22",
+                                             "Height=22"
+                                         ]
+                          },
+                          {
+                              "target":  "SystemTray.NotifyIconView#NotifyItemIcon",
+                              "styles":  [
+                                             "MinWidth=40"
+                                         ]
+                          },
+                          {
+                              "target":  "SystemTray.ChevronIconView",
+                              "styles":  [
+                                             "MinWidth=40"
+                                         ]
+                          },
+                          {
+                              "target":  "SystemTray.TextIconContent \u003e Grid#ContainerGrid \u003e SystemTray.AdaptiveTextBlock#Base \u003e TextBlock#InnerTextBlock",
+                              "styles":  [
+                                             "FontSize=20"
                                          ]
                           },
                           {
